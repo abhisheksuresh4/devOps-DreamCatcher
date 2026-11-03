@@ -8,14 +8,14 @@ A full-stack web application that allows users to record their dreams and receiv
 - Get AI interpretations of your dreams
 - View all past dreams and their interpretations
 - Delete dreams
-- SQLite database for persistent storage
+- PostgreSQL database for persistent storage
 - Vanilla JavaScript frontend
 - Express backend with RESTful API
 
 ## Tech Stack
 
 - **Backend**: Node.js, Express
-- **Database**: SQLite (better-sqlite3)
+- **Database**: PostgreSQL (node-postgres)
 - **Frontend**: HTML, CSS, Vanilla JavaScript
 - **AI**: Google Gemini API
 
@@ -27,7 +27,6 @@ dream-journal/
 ├── package.json        # Dependencies and scripts
 ├── .env               # Environment variables (create this)
 ├── .env.example       # Example env file
-├── dreams.db          # SQLite database (auto-created)
 └── public/
     ├── index.html     # Frontend HTML
     ├── styles.css     # Styles
@@ -56,7 +55,11 @@ Edit `.env` and add your Gemini API key:
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3.6-flash
 PORT=3001
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+DB_SCHEMA=public
 ```
+
+For a local Postgres: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:17`
 
 Get your API key from: https://aistudio.google.com/apikey
 
@@ -72,7 +75,7 @@ Production mode:
 npm start
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:3001`
 
 ## API Endpoints
 
@@ -83,37 +86,23 @@ The app will be available at `http://localhost:3000`
 
 ## Deployment to Render
 
-### 1. Prepare Your Repository
+Everything is defined in `render.yaml` (a Render Blueprint):
 
-Make sure your code is in a Git repository (GitHub, GitLab, etc.)
+| Resource | Branch | Data |
+|---|---|---|
+| `dream-catcher` (web, Docker) | `main` | `public` schema |
+| `dream-catcher-staging` (web, Docker) | `staging` | `staging` schema |
+| `dream-catcher-db` (Postgres, free) | n/a | shared by both services |
 
-### 2. Create a New Web Service on Render
+Render allows one free Postgres per workspace, so production and staging share
+one instance and are separated by schema (`DB_SCHEMA`). `DATABASE_URL` is wired
+in automatically from the database; `GEMINI_API_KEY` must be entered in the
+Render dashboard for each service.
 
-1. Go to https://render.com and sign in
-2. Click "New +" and select "Web Service"
-3. Connect your repository
-4. Configure the service:
-   - **Name**: dream-journal (or your choice)
-   - **Environment**: Node
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
+Release flow: push to `staging`, check the staging URL, then merge into `main`.
 
-### 3. Add Environment Variables
-
-In the Render dashboard, add:
-- `GEMINI_API_KEY`: Your Google Gemini API key
-- `GEMINI_MODEL`: `gemini-3.6-flash` (or another supported Gemini model)
-
-### 4. Deploy
-
-Click "Create Web Service" and Render will deploy your app automatically.
-
-### 5. Database Persistence
-
-Note: The SQLite database file will be stored in Render's ephemeral filesystem. For production, consider:
-- Using Render's persistent disk feature
-- Migrating to PostgreSQL for better persistence
-- Backing up data regularly
+Note: free Render Postgres databases expire 30 days after creation. Upgrade the
+database plan to keep data long term.
 
 ## Usage
 

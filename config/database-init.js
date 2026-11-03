@@ -1,15 +1,16 @@
-import { getDatabase } from './database.js';
+import { getDatabase, getSchema } from './database.js';
 
-// Create dreams table if it doesn't exist
+// Create the schema and dreams table if they don't exist
 export async function initDatabase() {
   try {
-    const db = await getDatabase();
-    await db.exec(`
+    const db = getDatabase();
+    await db.query(`CREATE SCHEMA IF NOT EXISTS ${getSchema()}`);
+    await db.query(`
       CREATE TABLE IF NOT EXISTS dreams (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         dream_text TEXT NOT NULL,
         interpretation TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
   } catch (error) {

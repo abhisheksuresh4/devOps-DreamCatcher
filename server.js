@@ -32,4 +32,6 @@ initDatabase().then(() => {
   });
 }).catch(error => {
   console.error('Failed to initialize database:', error);
+  // Exit so the platform marks the deploy as failed instead of hanging
+  process.exit(1);
 });

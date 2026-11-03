@@ -1,8 +1,11 @@
 services:
+  # Production: deploys from main, stores data in the "public" schema
   - type: web
     name: dream-catcher
     runtime: docker
     plan: free
+    region: oregon
+    branch: main
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /
@@ -14,3 +17,44 @@ services:
         value: gemini-3.6-flash
       - key: GEMINI_API_KEY
         sync: false # entered in the Render dashboard, never committed
+      - key: DB_SCHEMA
+        value: public
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dream-catcher-db
+          property: connectionString
+
+  # Staging: deploys from the staging branch, stores data in the "staging" schema
+  - type: web
+    name: dream-catcher-staging
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: staging
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DB_SCHEMA
+        value: staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dream-catcher-db
+          property: connectionString
+
+databases:
+  # Render allows one free Postgres per workspace, so both environments share
+  # this instance and are kept apart by schema.
+  - name: dream-catcher-db
+    plan: free
+    region: oregon
+    databaseName: dream_catcher
+    user: dream_catcher
+    ipAllowList: [] # internal network only; no public access
