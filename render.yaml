@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: dream-catcher
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: GEMINI_API_KEY
+        sync: false # entered in the Render dashboard, never committed

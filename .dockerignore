@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dreams.db
+*.db-shm
+*.db-wal
+.git/
+.gitignore
+npm-debug.log*
